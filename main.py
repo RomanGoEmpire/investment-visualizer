@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-class IncomeType(StrEnum):
+class InvestmentType(StrEnum):
     MONTH = auto()
     YEAR = auto()
 
@@ -18,31 +18,30 @@ def add_yearly_gains(capital) -> float:
 
 
 st.set_page_config(page_title="Investment Vizualizer", page_icon="💸")
-st.title("Investment Visualizer")
+st.title(":material_payments: Investment Visualizer")
 
-start_capital = st.number_input("Start Capital", 0)
-income_type = st.segmented_control(
-    "Income per",
-    options=list(IncomeType),
-    default=IncomeType.MONTH.value,
-    selection_mode="single",
-    key="income_type"
-)
-income = st.number_input("Income", 0, value=1000, key="income")
-duration = st.number_input("Duration in Years", 0, 1000, 10)
+with st.sidebar:
+    start_capital = st.number_input("Start Capital", 0)
+    investment_type = st.segmented_control(
+        "Investment per",
+        options=list(InvestmentType),
+        default=InvestmentType.MONTH.value,
+        selection_mode="single"
+    )
+    investment = st.number_input("Investment", 0, value=1000)
+    duration = st.number_input("Duration in Years", 2, 1000, 10)
 
-increase_percentage = st.number_input("Increase in Percent", 0.0, 50.0, 4.0)
-inflation_percentage = st.number_input("Inflation in Percent", 0.0, 10.0)
-total_percentage = increase_percentage - inflation_percentage
-st.write(f"Total Increase Percentage {total_percentage} %")
+    increase_percentage = st.number_input("Increase in Percent", 0.0, 50.0, 4.0)
+    inflation_percentage = st.number_input("Inflation in Percent", 0.0, 10.0)
+    total_percentage = increase_percentage - inflation_percentage
+    st.write(f"Total increase percentage `{total_percentage}%`")
 
-st.divider()
+    st.divider()
+    start_year_takeout = st.slider("Start year takeout", 1, duration, duration)
+    takeout = st.number_input("Takeout per Year", 0)
+    adjust_takeout = st.checkbox("Adjust takeout to inflation")
 
-start_year_takeout = st.slider("Start year takeout", 1, duration, duration)
-takeout = st.number_input("Takeout per Year", 0)
-adjust_takeout = st.checkbox("Adjust takeout to inflation")
-
-income_per_year = income * 12 if income_type == IncomeType.MONTH.value else income
+    income_per_year = investment * 12 if investment_type == InvestmentType.MONTH.value else investment
 
 data = {
     "years": [y for y in range(duration + 1)],
@@ -85,12 +84,13 @@ fig.add_trace(go.Scatter(
     name='Capital'
 ))
 
-fig.add_trace(go.Scatter(
-    x=data["years"],
-    y=data["takeout"],
-    mode='lines',
-    name='Takeout'
-))
+if start_year_takeout != duration:
+    fig.add_trace(go.Scatter(
+        x=data["years"],
+        y=data["takeout"],
+        mode='lines',
+        name='Takeout'
+    ))
 
 # Update layout
 
